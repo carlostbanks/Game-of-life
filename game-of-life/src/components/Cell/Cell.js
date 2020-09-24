@@ -17,6 +17,7 @@ export default function Cell(props) {
             }}
             style={{width: `${cellSize}%`, height: `${cellSize}%`, background: `${cellColor}`  }}
         >
+
         </CellContainer>
     )
 }
@@ -26,4 +27,4 @@ const CellContainer = styled.div`
     display: flex;
     flex-wrap: wrap;
     border: 1px solid gray;
-`
+    `
