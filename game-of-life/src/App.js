@@ -1,12 +1,14 @@
-import React from 'react';
-import TopBar from '../src/components/TopBar/TopBar';
-import Grid from '../src/components/Grid/Grid';
-import ControlBar from '../src/components/ControlBar/ControlBar';
-import styled from 'styled-components';
-import './App.css';
+import React from 'react'
+import './App.css'
+import Grid from '../src/components/Grid/Grid'
+import TopBar from '../src/components/TopBar/TopBar'
+import ControlBar from '../src/components/ControlBar/ControlBar'
+import styled from 'styled-components'
+
+
 
 class App extends React.Component {
-
+  // on load, state should be a 15x15 grid with all cells set to dead
   state = {
     currentGrid: [],
     gridDimensions: 15,
@@ -39,9 +41,9 @@ class App extends React.Component {
       currentGrid: newGrid
     })
   }
-   //createGrid^^^^^^^^------------------------------------------------------------------------------------------------
+  //createGrid^^^^^^^^------------------------------------------------------------------------------------------------
 
-   setNewDimensions = (newGridDim) => {
+  setNewDimensions = (newGridDim) => {
     this.setState({
       gridDimensions: newGridDim
     });
@@ -108,9 +110,102 @@ class App extends React.Component {
   // toggle dead/alive^^^^^^^------------------------------------------------------------------------------------------
 
 
+  gameAlgo = () => {
+    //start from neighbor on top and work clockwise around each cell
+    //first count up the neighbors
+    let nextGenGrid = [];
+    const size = this.state.gridDimensions;
 
-
-
+    //send the current state into a mutable variable
+    for (let x = 0; x < size; x++) {
+      let gridRow = []
+      for (let y = 0; y < size; y++) {
+        gridRow.push({ ...this.state.currentGrid[x][y] })
+      }
+      nextGenGrid.push(gridRow);
+    }
+    //this loops down each column, starting at the top left, first if will be right, then move clockwise
+    //the first if statement is to avoid errors for when cell does not have a neighbor to a specific direction
+    for (let x = 0; x < size; x++) {
+      for (let y = 0; y < size; y++) {
+        let liveNeighbors = 0;
+        //right neighbor
+        if (x < size - 1) {
+          if (this.state.currentGrid[y][x + 1].isAlive) {
+            liveNeighbors++
+            //console.log('right works!!!!', liveNeighbors, x, y)
+          }
+        }
+        //bottom-right neighbor
+        if (y < size - 1 && x < size - 1) {
+          if (this.state.currentGrid[y + 1][x + 1].isAlive) {
+            liveNeighbors++
+            //console.log('bottom-right works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        //bottom neighbor
+        if (y < size - 1) {
+          if (this.state.currentGrid[y + 1][x].isAlive) {
+            liveNeighbors++
+            //console.log('bottom works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        //bottom-left
+        if (y < size - 1 && x > 0) {
+          if (this.state.currentGrid[y + 1][x - 1].isAlive) {
+            liveNeighbors++
+            //console.log('bottom-left works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        //left
+        if (x > 0) {
+          if (this.state.currentGrid[y][x - 1].isAlive) {
+            liveNeighbors++
+            //console.log('left works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        //top-left
+        if (x > 0 && y > 0) {
+          if (this.state.currentGrid[y - 1][x - 1].isAlive) {
+            liveNeighbors++
+            //console.log('top-left works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        // above neighbor
+        if (y > 0) {
+          if (this.state.currentGrid[y - 1][x].isAlive) {
+            liveNeighbors++
+            //console.log('top works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        // top right neighbor
+        if (y > 0 && x < size - 1) {
+          if (this.state.currentGrid[y - 1][x + 1].isAlive) {
+            liveNeighbors++
+            //console.log('top-right works!!!!', liveNeighbors, '     X,Y:', x, y)
+          }
+        }
+        // apply life/death rules based on neighbor count
+        //life
+        //cell is dead and has 3 neighbors it comes to life
+        if (this.state.currentGrid[y][x].isAlive === false && liveNeighbors === 3) {
+          nextGenGrid[y][x].isAlive = true;
+        }
+        //death
+        // less than 2 neighbors, dies of underpopulation
+        // more than 3 neighbors, dies of overpopulation
+        if (this.state.currentGrid[y][x].isAlive === true && (liveNeighbors > 3 || liveNeighbors < 2)) {
+          nextGenGrid[y][x].isAlive = false;
+        }
+      }
+    }
+    // increse generation by 1
+    this.setState({
+      generation: this.state.generation + 1,
+      currentGrid: nextGenGrid
+    })
+  }
+  //Game algo^^^-----------------------------------------------------------------------------------------------
 
 
   //start game-- has button on controlbar
@@ -425,48 +520,49 @@ class App extends React.Component {
 
 
 
+  render() {
+    return (
+      <div className="App">
+        <p>Carlos Banks: Conway's Game of Life</p>
 
+        <h2>Rules:</h2>
+            <p>If the cell is alive and has 2 or 3 neighbors, then it remains
+            alive. Else it dies.</p>
+            <p>If the cell is dead and has exactly 3 neighbors, then it comes to
+            life. Else if remains dead.
+            </p>
 
-render() {
-  return (
-    <div className="App">
-      <p>Carlos Banks: Conway's Game of Life</p>
-      <nav>
-        <a href='https://github.com/jbasile6/Conways-Life/blob/master/objectives/rules-game-life'>Game Rules</a>
-        <a href='#info'>Info Section</a>
-      </nav>
-
-      <AppWrapper>
-        <GameWrapper>
-          <p>Generation: {this.state.generation}</p>
-          <p>Game Speed: {this.state.displaySpeed}</p>
-          <Grid
-            currentGrid={this.state.currentGrid}
-            size={this.state.gridDimensions}
-            toggleCell={this.toggleCell}
-          />
-        </GameWrapper>
-        <ControlWrapper>
-          <TopBar
-            startGame={this.startGame}
-            stopGame={this.stopGame}
-            nextGen={this.gameAlgo}
-            increaseSpeed={this.increaseSpeed}
-            decreaseSpeed={this.decreaseSpeed}
-          />
-          <ControlBar
-            gridReset={this.setNewDimensions}
-            randomizeGrid={this.randomizeGrid}
-            clearGrid={this.clearGrid}
-            startGame={this.startGame}
-            stopGame={this.stopGame}
-            robotPreset={this.presetGridRobo}
-          />
-        </ControlWrapper>
-      </AppWrapper>
-    </div>
-  )
-}
+        <AppWrapper>
+          <GameWrapper>
+            <p>Generation: {this.state.generation}</p>
+            <p>Game Speed: {this.state.displaySpeed}</p>
+            <Grid
+              currentGrid={this.state.currentGrid}
+              size={this.state.gridDimensions}
+              toggleCell={this.toggleCell}
+            />
+          </GameWrapper>
+          <ControlWrapper>
+            <TopBar
+              startGame={this.startGame}
+              stopGame={this.stopGame}
+              nextGen={this.gameAlgo}
+              increaseSpeed={this.increaseSpeed}
+              decreaseSpeed={this.decreaseSpeed}
+            />
+            <ControlBar
+              gridReset={this.setNewDimensions}
+              randomizeGrid={this.randomizeGrid}
+              clearGrid={this.clearGrid}
+              startGame={this.startGame}
+              stopGame={this.stopGame}
+              robotPreset={this.presetGridRobo}
+            />
+          </ControlWrapper>
+        </AppWrapper>
+      </div>
+    )
+  }
 }
 
 
@@ -475,21 +571,18 @@ render() {
 export default App;
 
 const AppWrapper = styled.div`
-display: flex;
-flex-wrap: nowrap;
-border: 2px solid gray;
-padding: 10px 10px;
+  display: flex;
+  flex-wrap: nowrap;
 `
 
 const GameWrapper = styled.div`
-display: flex;
-justify-content: center;
-width: 48%; 
-flex-wrap: wrap;
+  display: flex;
+  width: 48%; 
+  flex-wrap: wrap;
 `
 
 
 const ControlWrapper = styled.div`
-width: 48%;
-flex-direction: column;
+  width: 48%;
+  flex-direction: column;
 `
